@@ -1,0 +1,11 @@
+<div class="ui-grid-cell-contents">
+    <button type="button" class="btn btn-xs btn-primary" ng-click="grid.appScope.index.viewSteps(row.entity._id)">
+        <span class="glyphicon glyphicon-list-alt"></span>
+    </button>
+    <a href="mailto:?body={{grid.appScope.index.getEmailMessage(row.entity)}}&subject={{grid.appScope.index.getEmailSubject(row.entity)}}" type="button" class="btn btn-xs btn-primary">
+        <span class="glyphicon glyphicon-envelope"></span>
+    </a>
+</div>
+
+
+

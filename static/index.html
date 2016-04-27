@@ -1,0 +1,208 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Portal Test Reports</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="angular-ui-grid/ui-grid.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <style>
+        body {
+            padding-top: 50px;
+            padding-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .modal-xl {
+                width: 90%;
+                max-width: 1200px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .modal-lg {
+                width: 900px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .modal-dialog {
+                width: 600px;
+                margin: 30px auto;
+            }
+        }
+
+        .grid {
+            height: 90vh;
+        }
+
+        table.table.table-condensed {
+            border: 1px solid black;
+        }
+
+
+    </style>
+    <script src="jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="angular.min.js"></script>
+    <script src="angular-ui-grid/ui-grid.min.js"></script>
+    <script src="angular-route.min.js"></script>
+
+    <script>
+        var app = angular.module("ToDoApp", ["ui.grid", "ui.grid.cellNav", "ui.grid.selection", "ngRoute"]);
+        app.config(function ($routeProvider) {
+            $routeProvider
+                    .when('/:id', {
+                        controller: function ($routeParams) {
+                            if ($routeParams.id) {
+                                $('.bs-example-modal-lg').modal('show');
+                            }
+                        },
+                        template: ""
+                    });
+        });
+
+        app.controller("indexController", function ($http, $routeParams) {
+            var index = this;
+            index.selectedRow = null;
+
+            $http.get("/report").success(function (list) {
+                index.uiGrid.data = list;
+            });
+
+            index.viewSteps = function (id) {
+                window.location.hash = "/" + id;
+            }
+
+            index.getSelectedRow = function () {
+                var row = index.uiGrid.data.filter(function (item) {
+                    return item._id == $routeParams.id;
+                })[0];
+                return row;
+            }
+
+            index.getEmailMessage = function (result) {
+                return "Please see details here: " + window.location + result.id;
+            }
+
+            index.getEmailSubject = function (result) {
+                return result.testType + " Results for Build Number: " + result.buildNumber + " - Env: " + result.env + " - Feature: " + result.feature;
+
+            }
+
+            index.uiGrid = {
+                enableFiltering: true,
+                enableRowSelection: false,
+                multiSelect: false,
+                columnDefs: [
+
+                    {field: "date", displayName: "Date", cellFilter: "date:\'yyyy-MM-dd\'"},
+                    {field: "app", displayName: "App"},
+                    {field: "env", displayName: "Env"},
+                    {field: "buildNumber", displayName: "Build Number"},
+                    {field: "team", displayName: "Team"},
+                    {field: "testType", displayName: "Test Type"},
+                    {field: "feature", displayName: "Feature"},
+                    {field: "testName", displayName: "Test Name"},
+                    {
+                        field: "testStatus",
+                        displayName: "Status",
+                        cellTemplate: "list-status.html"
+                    },
+                    {field: 'id', name: 'Action', cellTemplate: 'list-button.html'},
+                ],
+            };
+            index.log = console.log;
+        })
+        $(function () {
+            $('.bs-example-modal-lg').on('hidden.bs.modal', function () {
+                window.location.hash = "/";
+            })
+        })
+
+    </script>
+
+<body ng-app="ToDoApp" ng-controller="indexController as index">
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="navbar-header">
+        <a class="navbar-brand"> Portal Test Results</a>
+    </div>
+</nav>
+<div>
+    <div class="btn-toolbar">
+        <div ui-grid="index.uiGrid" ui-grid-selection class="grid"></div>
+        <div ng-view></div>
+    </div>
+    <div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+        <div class="modal-dialog modal-xl" style="width: auto;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <div class="modal-title">
+                        <table width="100%">
+                            <tr>
+                                <td><b>Date:</b>
+                                    {{index.getSelectedRow().date|date:'yyyy-MM-dd'}}
+                                </td>
+                                <td><b>App:</b>
+                                    {{index.getSelectedRow().app}}
+                                </td>
+
+                                <td><b>Env:</b>
+                                    {{index.getSelectedRow().env}}
+                                </td>
+
+                                <td><b>Build Number:</b>
+                                    {{index.getSelectedRow().buildNumber}}
+                                </td>
+
+                                <td><b>Team:</b>
+                                    {{index.getSelectedRow().team}}
+                                </td>
+
+                                <td><b>Test Type:</b>
+                                    {{index.getSelectedRow().testType}}
+                                </td>
+
+                                <td><b>Feature:</b>
+                                    {{index.getSelectedRow().feature}}
+                                </td>
+
+                                <td><b>Test Name:</b>
+                                    {{index.getSelectedRow().testName}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover table-condensed table-bordered">
+                        <thead class="thead-inverse">
+                        <tr>
+                            <th>Step Name</th>
+                            <th>Step Details</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="step in index.getSelectedRow().steps">
+                            <td>{{step.name}}</td>
+                            <td>{{step.details}}</td>
+                            <td style="color:{{step.status.toLowerCase()=='passed'?'green':'red'}}; font-weight: bold">
+                                {{step.status}}
+                            </td>
+
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

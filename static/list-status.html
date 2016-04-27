@@ -1,0 +1,10 @@
+<div class="ui-grid-cell-contents">
+    <span ng-click="grid.appScope.index.log(grid)"
+          style="color:{{row.entity[col.field].toLowerCase()=='passed'?'green':'red'}}; font-weight: bold">
+        <span class="glyphicon glyphicon-{{row.entity[col.field].toLowerCase()=='passed'?'ok':'remove'}}-circle"></span>
+        {{row.entity[col.field]}}
+    </span>
+</div>
+
+
+
